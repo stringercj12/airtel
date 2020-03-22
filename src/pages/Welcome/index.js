@@ -6,27 +6,90 @@ import {
     Image,
     TouchableOpacity,
     Alert,
-    TextInput
+    TextInput,
+    Animated,
+    ScrollView,
+    CheckBox
 } from 'react-native';
+import Modal from 'react-native-modal';
+import AsyncStorage from '@react-native-community/async-storage';
 
-export default function Welcome() {
+import Icon from 'react-native-vector-icons/FontAwesome';
+
+
+
+export default function Welcome({ navigation }) {
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
+    const [nic, setNic] = useState('');
+    const [email, setEmail] = useState('');
+    const [pass, setPass] = useState('');
+    const [confirmPass, setConfirmPass] = useState('');
+    // Ações do modal
+    const [modalVisibleLogin, setModalVisibleLogin] = useState(false);
+    const [modalVisibleSignUp, setModalVisibleSignUp] = useState(false);
+    const [modalVisibleLanguage, setModalVisibleLanguage] = useState(false);
+    const [scrollOffset, setScrollOffset] = useState('');
+
+    function handleOnScroll(event) {
+        setScrollOffset(event.nativeEvent.contentOffset.y);
+    }
+
+    function handleScrollTo(p) {
+        if (this.scrollViewRef.current) {
+            this.scrollViewRef.current.scrollTo(p);
+        }
+    }
+
+    function toggleModalVisibleLogin() {
+        setModalVisibleLogin(!modalVisibleLogin);
+    }
+
+    function toggleModalVisibleSignUp() {
+        setModalVisibleSignUp(!modalVisibleSignUp);
+    }
+
+    function toggleModalVisibleLanguage() {
+        setModalVisibleLanguage(!modalVisibleLanguage);
+    }
+
 
     function heandleLogin() {
         if (user === "" && password === "") {
             Alert.alert('Por favor informe login e senha para continuar...');
             return;
-        }else{
+        } else {
             Alert.alert('Login efetuado, em breve você irá para nova home...');
+            setModalVisibleLogin(false);
+            navigation.navigate('Tabs');
             return;
         }
     }
 
+    function heandleCreate() {
+        if (pass !== confirmPass) {
+            Alert.alert('As senhas não conferem');
+            return;
+        } else {
+            Alert.alert('Cadastro efetuado, em breve você irá para nova home...');
+            return;
+        }
+    }
+
+    async function heandleLanguage(e) {
+        try {
+            await AsyncStorage.setItem('LanguageSelect', 'English')
+        } catch (e) {
+            // saving error
+        }
+    }
+
     return (
-        <View style={styles.Container}>
+
+
+        < View style={styles.Container} >
             {/* <Icon name="Home" size={58} color="#f00" /> */}
-            <View style={styles.Logo}>
+            < View style={styles.Logo} >
                 <Image source={require('./../../assets/logo-branca.png')} />
             </View>
 
@@ -40,50 +103,134 @@ export default function Welcome() {
 
                     <TouchableOpacity
                         style={styles.ButtonSingUp}
-                        onPress={() => Alert.alert('SIGN UP')}
+                        onPress={toggleModalVisibleSignUp}
                     >
                         <Text style={styles.ButtonSingUpText}>SIGN UP</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.ButtonLogin} onPress={() => Alert.alert('LOGIN')}>
+                    <TouchableOpacity style={styles.ButtonLogin} onPress={toggleModalVisibleLogin}>
                         <Text style={styles.ButtonLoginText}>LOGIN</Text>
                     </TouchableOpacity>
 
                 </View>
 
 
-                <View style={styles.Language}>
+                <View style={styles.Language} >
                     <Text style={styles.LanguageText}>Language</Text>
-                    <TouchableOpacity style={styles.ButtonLanguage} onPress={() => Alert.alert('Language')}>
+                    <TouchableOpacity style={styles.ButtonLanguage} onPress={toggleModalVisibleLanguage}>
                         <Text style={styles.ButtonLanguageText}>English</Text>
                     </TouchableOpacity>
                 </View>
 
             </View>
 
-
-            <View style={styles.Modal}>
-                <View style={styles.AreaTextModal}>
-                    <View style={styles.ButtonClose}>
-                        <Text style={styles.white}>x</Text>
+            <Modal style={{ padding: 0 }} isVisible={modalVisibleLogin}>
+                <Animated.View style={styles.ModalArea}>
+                    <View style={[styles.AreaTextModal]}>
+                        <View>
+                            <Text style={styles.TitleModal}>Login</Text>
+                            <Text style={styles.SubTitleModal}>Lets get started</Text>
+                        </View>
+                        <View>
+                            <TouchableOpacity style={styles.ButtonClose} onPress={toggleModalVisibleLogin}>
+                                <Icon name="close" size={14} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <Text style={styles.TitleModal}>LOGIN</Text>
-                    <Text style={styles.SubTitleModal}>Lets get started</Text>
-                </View>
-                <TextInput style={styles.Input} onChangeText={setUser} placeholder="Mobile number" />
+                    <TextInput style={styles.Input} onChangeText={setUser} placeholder="Mobile number" />
 
-                <TextInput style={styles.Input} onChangeText={setPassword} placeholder="Password" />
+                    <TextInput style={styles.Input} onChangeText={setPassword} placeholder="Password" />
 
-                <View style={styles.ForgotPassword}>
-                    <Text style={styles.ForgotPasswordText}>Forgot password ?</Text>
-                </View>
+                    <View style={styles.ForgotPassword}>
+                        <Text style={styles.ForgotPasswordText}>Forgot password ?</Text>
+                    </View>
 
-                <TouchableOpacity style={styles.ButtonLoginModal} onPress={heandleLogin}>
-                    <Text style={styles.ButtonLoginModalText}>Login</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity style={styles.ButtonLoginModal} onPress={heandleLogin}>
+                        <Text style={styles.ButtonLoginModalText}>Login</Text>
+                    </TouchableOpacity>
 
-            </View>
-        </View>
+                </Animated.View>
+            </Modal>
+
+            <Modal isVisible={modalVisibleSignUp}>
+                <Animated.View style={[styles.ModalArea, {
+                    height: 370,
+                }]}>
+                    <ScrollView style={{ flex: 1 }}>
+                        <View style={[styles.AreaTextModal]}>
+                            <View>
+                                <Text style={styles.TitleModal}>Signup</Text>
+                                <Text style={styles.SubTitleModal}>Register with airtel account number, to start your account!</Text>
+                            </View>
+                            <View>
+                                <TouchableOpacity style={[styles.ButtonClose, { right: 30, top: -20 }]} onPress={toggleModalVisibleSignUp}>
+                                    <Icon name="close" size={14} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <TextInput style={styles.Input} onChangeText={setUser} placeholder="Mobile number" />
+
+                        <TextInput style={styles.Input} onChangeText={setNic} placeholder="NIC number" />
+
+                        <TextInput style={styles.Input} onChangeText={setEmail} placeholder="Email address" />
+
+                        <TextInput style={styles.Input} onChangeText={setPass} placeholder="Password" />
+
+                        <TextInput style={styles.Input} onChangeText={setConfirmPass} placeholder="Confirm password" />
+
+                        <CheckBox />
+                        <Text>Terms & conditions</Text>
+
+
+                        <TouchableOpacity style={styles.ButtonLoginModal} onPress={heandleCreate}>
+                            <Text style={styles.ButtonLoginModalText}>SIGN UP</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                </Animated.View>
+            </Modal>
+
+            <Modal isVisible={modalVisibleLanguage}>
+                <Animated.View style={[styles.ModalArea]}>
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row' }}>
+                        <View>
+                            <Text style={{ justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', color: '#999999' }}>Select language</Text>
+                        </View>
+                        <View >
+                            <TouchableOpacity style={styles.ButtonClose} onPress={toggleModalVisibleLanguage}>
+                                <Icon name="close" size={14} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+
+                    </View>
+
+                    <View style={{ flex: 1, flexDirection: 'row', padding: 20, justifyContent: 'center', alignItems: 'center' }}>
+
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                            <TouchableOpacity onPress={heandleLanguage} style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F2F2', width: 60, height: 60, borderRadius: 50, margin: 15 }}>
+                                <Icon name="etsy" size={18} color="#D6001B" />
+                            </TouchableOpacity>
+                            <Text style={{ color: '#999999' }}>English</Text>
+                        </View>
+
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                            <TouchableOpacity onPress={heandleLanguage} style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F2F2', width: 60, height: 60, borderRadius: 50, margin: 15 }}>
+                                <Icon name="home" size={18} color="#D6001B" />
+                            </TouchableOpacity>
+                            <Text style={{ color: '#999999' }}>Português</Text>
+                        </View>
+
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                            <TouchableOpacity onPress={heandleLanguage} style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F2F2', width: 60, height: 60, borderRadius: 50, margin: 15 }}>
+                                <Icon name="home" size={18} color="#D6001B" />
+                            </TouchableOpacity>
+                            <Text style={{ color: '#999999' }}>Espanhol</Text>
+                        </View>
+                    </View>
+
+                </Animated.View>
+            </Modal>
+        </View >
     );
 }
 
@@ -183,16 +330,17 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold'
     },
-    Modal: {
+    ModalArea: {
         flex: 1,
         backgroundColor: '#fff',
         position: 'absolute',
-        width: '100%',
+        width: 360,
         borderTopRightRadius: 25,
         borderTopLeftRadius: 25,
         paddingHorizontal: 15,
+        marginHorizontal: -18,
         padding: 30,
-        bottom: -40
+        bottom: -20
     },
     Input: {
         padding: 10,
@@ -203,7 +351,9 @@ const styles = StyleSheet.create({
     },
     AreaTextModal: {
         flex: 1,
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexDirection: 'row',
         paddingBottom: 20
     },
     TitleModal: {
@@ -229,7 +379,7 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: '#D6001B',
         backgroundColor: '#D6001B',
-        width: 335,
+        width: '100%',
         height: 52,
         padding: 15,
         marginBottom: 35,
@@ -241,15 +391,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     },
     ButtonClose: {
-        position: 'absolute',
-        width: 20,
-        height: 20,
+        width: 22,
+        height: 22,
         borderRadius: 50,
         backgroundColor: '#D6001B',
         justifyContent: 'center',
         alignItems: 'center',
-        flex: 1,
-        right: 0
     },
     white: {
         color: '#fff',
